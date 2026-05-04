@@ -3,12 +3,12 @@ import sys
 from datetime import datetime
 import requests
 import os
-from dotenv import load_dotenv
+
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+BOT_TOKEN = "6180881337:AAEZgfdGhwXMD3nB6_k6l8GHi2Ujy3OvV9g"
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
 
 if not BOT_TOKEN or not YANDEX_API_KEY:
