@@ -9,7 +9,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 
 BOT_TOKEN = "6180881337:AAEZgfdGhwXMD3nB6_k6l8GHi2Ujy3OvV9g"
-YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
+YANDEX_API_KEY = "e6963e02-5426-4d12-8f4a-b7e7abded541"
 
 if not BOT_TOKEN or not YANDEX_API_KEY:
     raise ValueError("Ошибка: нет токенов в .env")
