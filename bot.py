@@ -9,6 +9,13 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 
 BOT_TOKEN = "6180881337:AAEZgfdGhwXMD3nB6_k6l8GHi2Ujy3OvV9g"
+YANDEX_API_KEY = "ваш_ключ_яндекс"
+
+# Если вы оставили строки с os.getenv, удалите их.
+
+# Проверку тоже можно убрать или оставить, но тогда ключи точно должны быть не пустыми.
+if not BOT_TOKEN or not YANDEX_API_KEY:
+    raise ValueError("Ошибка: нет токенов (проверьте переменные выше)")
 YANDEX_API_KEY = "e6963e02-5426-4d12-8f4a-b7e7abded541"
 
 if not BOT_TOKEN or not YANDEX_API_KEY:
