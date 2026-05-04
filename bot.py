@@ -1,7 +1,7 @@
 import logging
 import sys
 from datetime import datetime
-import aiohttp
+import requests
 import os
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
@@ -19,12 +19,11 @@ def run_web():
 Thread(target=run_web, daemon=True).start()
 
 # Загрузка токенов
-load_dotenv('/storage/emulated/0/MyBots/.env')  # путь для локального запуска, на Render будет искать .env в корне
+load_dotenv()  # на Render будет искать .env в корне
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY")
-
 if not BOT_TOKEN or not YANDEX_API_KEY:
-    raise ValueError("Отсутствуют токены")
+    raise ValueError("Отсутствуют токены в .env")
 
 # Коды городов
 CITY_CODES = {
@@ -38,34 +37,37 @@ CITY_CODES = {
 def get_city_code(city: str) -> str | None:
     return CITY_CODES.get(city.lower().strip())
 
-async def get_schedule(from_city, to_city, date_str):
+def get_schedule_sync(from_city, to_city, date_str):
     from_code = get_city_code(from_city)
     to_code = get_city_code(to_city)
     if not from_code or not to_code:
         return f"❌ Город не найден: {from_city if not from_code else to_city}"
     url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_code}&to={to_code}&lang=ru_RU&date={date_str}&transport_types=train"
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    segments = data.get('segments')
-                    if not segments:
-                        return f"🚫 На {date_str} поездов не найдено."
-                    header = f"🚉 *Маршрут:* {from_city} → {to_city}\n📅 *Дата:* {date_str}\n\n"
-                    lines = []
-                    for i, seg in enumerate(segments[:5], 1):
-                        train = seg.get('thread', {}).get('number', '?')
-                        dep_raw = seg.get('departure', '??:??')
-                        arr_raw = seg.get('arrival', '??:??')
-                        dep = dep_raw.split('T')[1][:5] if 'T' in dep_raw else dep_raw
-                        arr = arr_raw.split('T')[1][:5] if 'T' in arr_raw else arr_raw
-                        lines.append(f"{i}. 🚄 *Поезд №{train}*\n   🕒 Отправление: {dep}\n   🏁 Прибытие: {arr}")
-                    return header + "\n\n".join(lines)
-                else:
-                    return f"❌ Ошибка API: {resp.status}"
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            data = resp.json()
+            segments = data.get('segments')
+            if not segments:
+                return f"🚫 На {date_str} поездов не найдено."
+            header = f"🚉 *Маршрут:* {from_city} → {to_city}\n📅 *Дата:* {date_str}\n\n"
+            lines = []
+            for i, seg in enumerate(segments[:5], 1):
+                train = seg.get('thread', {}).get('number', '?')
+                dep_raw = seg.get('departure', '??:??')
+                arr_raw = seg.get('arrival', '??:??')
+                dep = dep_raw.split('T')[1][:5] if 'T' in dep_raw else dep_raw
+                arr = arr_raw.split('T')[1][:5] if 'T' in arr_raw else arr_raw
+                lines.append(f"{i}. 🚄 *Поезд №{train}*\n   🕒 Отправление: {dep}\n   🏁 Прибытие: {arr}")
+            return header + "\n\n".join(lines)
+        else:
+            return f"❌ Ошибка API: {resp.status_code}"
     except Exception as e:
         return f"❌ Ошибка: {e}"
+
+async def get_schedule(from_city, to_city, date_str):
+    # Запускаем синхронную функцию в отдельном потоке, чтобы не блокировать бота
+    return await asyncio.to_thread(get_schedule_sync, from_city, to_city, date_str)
 
 # Клавиатура
 def get_main_keyboard():
