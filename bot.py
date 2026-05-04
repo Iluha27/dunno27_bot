@@ -1,4 +1,4 @@
-import logging
+import asyncioimport logging
 import sys
 from datetime import datetime
 import requests
