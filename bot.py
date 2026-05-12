@@ -5,10 +5,10 @@ import requests
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# ========== ВСТАВЬТЕ ВАШИ КЛЮЧИ ==========
+# ========== ВАШИ КЛЮЧИ ==========
 BOT_TOKEN = "6180881337:AAEZgfdGhwXMD3nB6_k6l8GHi2Ujy3OvV9g"
 YANDEX_API_KEY = "e6963e02-5426-4d12-8f4a-b7e7abded541"
-# ========================================
+# ================================
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
     """Запрашивает расписание, передавая названия городов напрямую (без кодов)."""
@@ -30,10 +30,6 @@ def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
                 arr = arr_raw.split('T')[1][:5] if 'T' in arr_raw else arr_raw
                 lines.append(f"{i}. 🚄 *Поезд №{train}*\n   🕒 {dep} → {arr}")
             return header + "\n\n".join(lines)
-        elif resp.status_code == 400:
-            return "❌ Ошибка 400: неверный запрос. Проверьте названия городов (должны быть на русском)."
-        elif resp.status_code == 403:
-            return "❌ Ошибка 403: неверный API-ключ. Проверьте YANDEX_API_KEY."
         else:
             return f"❌ Ошибка API: {resp.status_code}"
     except Exception as e:
