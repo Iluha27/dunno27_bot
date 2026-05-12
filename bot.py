@@ -1,4 +1,3 @@
-print("DEBUG: started")
 import logging
 import sys
 from datetime import datetime
@@ -11,39 +10,27 @@ BOT_TOKEN = "6180881337:AAEZgfdGhwXMD3nB6_k6l8GHi2Ujy3OvV9g"
 YANDEX_API_KEY = "e6963e02-5426-4d12-8f4a-b7e7abded541"
 # =====================================================
 
-CITY_CODES = {
-    "москва": "c213",
-    "санкт-петербург": "c2",
-    "спб": "c2",
-    "питер": "c2",
-    "новосибирск": "c48",
-    "нск": "c48",
-    "екатеринбург": "c54",
-    "екб": "c54",
-    "казань": "c30",
-    "нижний новгород": "c27",
-    "самара": "c35",
-    "омск": "c47",
-    "челябинск": "c56",
-    "ростов-на-дону": "c39",
-    "уфа": "c36",
-    "волгоград": "c38",
-    "пермь": "c57",
-    "краснодар": "c40",
-    "сургут": "c973",
-    "тюмень": "c55",
-    "когалым": "s9607701"
-}
+# Функция получения кода станции через suggests Яндекса (без ключа, синхронно)
+def get_station_code(station_name: str) -> str | None:
+    """Возвращает yandex_code для первого найденного совпадения."""
+    url = f"https://suggests.rasp.yandex.net/all_suggests?format=old&part={station_name}"
+    try:
+        resp = requests.get(url, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data and len(data) > 0 and isinstance(data[0], dict):
+                return data[0].get('yandex_code')
+        return None
+    except Exception:
+        return None
 
-def get_city_code(city: str) -> str | None:
-    return CITY_CODES.get(city.lower().strip())
-
+# Функция запроса расписания
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-    from_code = get_city_code(from_city)
-    to_code = get_city_code(to_city)
+    from_code = get_station_code(from_city)
+    to_code = get_station_code(to_city)
     if not from_code or not to_code:
         missing = from_city if not from_code else to_city
-        return f"❌ Город '{missing}' не найден."
+        return f"❌ Не удалось найти код станции: '{missing}'. Попробуйте уточнить название (например, 'Москва', 'Санкт-Петербург')."
     url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_code}&to={to_code}&lang=ru_RU&date={date_str}&transport_types=train"
     try:
         resp = requests.get(url, timeout=10)
@@ -81,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• Напиши `Город в Город` (сегодня)\n"
         "• Или `Город в Город ГГГГ-ММ-ДД`\n"
         "• Пример: `Москва в Санкт-Петербург`\n\n"
-        "Доступные города: Москва, СПб, Новосибирск, Екатеринбург, Казань, Когалым и др.",
+        "Я сам найду нужные коды станций, список городов не нужен.",
         parse_mode="Markdown",
         reply_markup=get_main_keyboard()
     )
@@ -91,7 +78,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Формат:\n"
         "`Москва в Санкт-Петербург` – показать на сегодня\n"
         "`Москва в Санкт-Петербург 2026-05-10` – на конкретную дату\n\n"
-        "Доступные города: " + ", ".join(sorted(set(CITY_CODES.keys()))),
+        "Бот сам подбирает коды станций через API Яндекса, поэтому пишите названия как можно точнее.",
         parse_mode="Markdown"
     )
 
@@ -139,4 +126,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
