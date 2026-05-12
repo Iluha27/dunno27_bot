@@ -1,3 +1,4 @@
+print("DEBUG: started")
 import logging
 import sys
 from datetime import datetime
