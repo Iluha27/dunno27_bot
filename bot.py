@@ -15,10 +15,7 @@ def run_web():
     port = int(os.environ.get("PORT", 10000)) # 10000 - дефолтный порт Render
     app_web.run(host="0.0.0.0", port=port) # Обязательно host="0.0.0.0"
 
-if __name__ == "__main__":
-    # Запускаем веб-сервер в отдельном потоке, чтобы он не блокировал бота
-    threading.Thread(target=run_web).start()
-    main() # Запускаем самого бота
+
 import sys
 from datetime import datetime
 import requests
@@ -132,10 +129,12 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_schedule))
     app.run_polling()
 
+def main():
+    # ... (тут ваш код настройки хендлеров и app.run_polling)
+    app.run_polling() # или как у вас написано в main()
+
 def run_web():
-    # Render сам выдаст нужный порт через переменную PORT
-    import os
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 10000))
     app_web.run(host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
