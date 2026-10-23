@@ -24,7 +24,10 @@ from datetime import datetime
 import requests
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-import os app_web = Flask(__name__)
+import os
+from flask import Flask
+
+app_web = Flask(__name__)
 
 @app_web.route('/')
 def home():
