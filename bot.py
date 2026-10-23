@@ -4,10 +4,10 @@ from datetime import datetime
 import requests
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-
+import os
 # ========== ВАШИ КЛЮЧИ ==========
-BOT_TOKEN = "6180881337:AAEZgfdGhwXMD3nB6_k6l8GHi2Ujy3OvV9g"
-YANDEX_API_KEY = "e6963e02-5426-4d12-8f4a-b7e7abded541"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 # ================================
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
