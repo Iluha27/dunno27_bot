@@ -1,8 +1,12 @@
+import logging
 import os
+import sys
 import threading
+import requests
+from datetime import datetime
 from flask import Flask
-
-# ... (остальные импорты и код бота) ...
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 app_web = Flask(__name__)
 
@@ -11,9 +15,8 @@ def home():
     return "Bot is running!"
 
 def run_web():
-    # Render передает порт через переменную окружения PORT
-    port = int(os.environ.get("PORT", 10000)) # 10000 - дефолтный порт Render
-    app_web.run(host="0.0.0.0", port=port) # Обязательно host="0.0.0.0"
+    port = int(os.environ.get("PORT", 10000))
+    app_web.run(host="0.0.0.0", port=port)
 
 
 import sys
