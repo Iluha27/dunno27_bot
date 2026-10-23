@@ -1,10 +1,15 @@
-import logging
+import threading
+from flask import Flaskimport 
 import sys
 from datetime import datetime
 import requests
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-import os
+import os app_web = Flask(__name__)
+
+@app_web.route('/')
+def home():
+    return "Bot is running!"
 # ========== ВАШИ КЛЮЧИ ==========
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
@@ -105,5 +110,14 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_schedule))
     app.run_polling()
 
+def run_web():
+    # Render сам выдаст нужный порт через переменную PORT
+    import os
+    port = int(os.environ.get("PORT", 8080))
+    app_web.run(host="0.0.0.0", port=port)
+
 if __name__ == "__main__":
+    # Запускаем веб-сервер в отдельном потоке
+    threading.Thread(target=run_web).start()
+    # Запускаем самого бота
     main()
