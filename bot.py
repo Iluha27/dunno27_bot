@@ -129,9 +129,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_schedule))
     app.run_polling()
 
-def main():
-    # ... (тут ваш код настройки хендлеров и app.run_polling)
-    app.run_polling() # или как у вас написано в main()
+
 
 def run_web():
     port = int(os.environ.get("PORT", 10000))
