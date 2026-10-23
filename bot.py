@@ -39,8 +39,7 @@ YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
     """Запрашивает расписание, передавая названия городов напрямую (без кодов)."""
-    url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_city}&to={to_city}&lang=ru_RU&date={date_str}&transport_types=train"
-    try:
+    url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_city}&to={to_city}&lang=ru_RU&date={date_str}&transport_types=train&format=json"
         resp = requests.get(url, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
