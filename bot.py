@@ -1,5 +1,24 @@
+import os
 import threading
-from flask import Flaskimport 
+from flask import Flask
+
+# ... (остальные импорты и код бота) ...
+
+app_web = Flask(__name__)
+
+@app_web.route('/')
+def home():
+    return "Bot is running!"
+
+def run_web():
+    # Render передает порт через переменную окружения PORT
+    port = int(os.environ.get("PORT", 10000)) # 10000 - дефолтный порт Render
+    app_web.run(host="0.0.0.0", port=port) # Обязательно host="0.0.0.0"
+
+if __name__ == "__main__":
+    # Запускаем веб-сервер в отдельном потоке, чтобы он не блокировал бота
+    threading.Thread(target=run_web).start()
+    main() # Запускаем самого бота
 import sys
 from datetime import datetime
 import requests
