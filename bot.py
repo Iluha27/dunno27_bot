@@ -38,14 +38,18 @@ YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 # ================================
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-    """Запрашивает расписание, передавая названия городов напрямую (без кодов)."""
+    """Запрашивает расписание."""
     url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_city}&to={to_city}&lang=ru_RU&date={date_str}&transport_types=train&format=json"
+    
+    try:
         resp = requests.get(url, timeout=10)
+        
         if resp.status_code == 200:
             data = resp.json()
             segments = data.get('segments')
             if not segments:
                 return f"🚫 На {date_str} поездов не найдено."
+                
             header = f"🚉 *{from_city} → {to_city}* на {date_str}\n\n"
             lines = []
             for i, seg in enumerate(segments[:5], 1):
@@ -55,9 +59,11 @@ def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
                 dep = dep_raw.split('T')[1][:5] if 'T' in dep_raw else dep_raw
                 arr = arr_raw.split('T')[1][:5] if 'T' in arr_raw else arr_raw
                 lines.append(f"{i}. 🚄 *Поезд №{train}*\n   🕒 {dep} → {arr}")
+                
             return header + "\n\n".join(lines)
         else:
             return f"❌ Ошибка API: {resp.status_code}"
+            
     except Exception as e:
         return f"❌ Ошибка: {e}"
 
