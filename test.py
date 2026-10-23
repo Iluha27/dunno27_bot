@@ -1,7 +1,7 @@
 import asyncio
 from telegram import Bot
 
-BOT_TOKEN =# ваш токен
+BOT_TOKEN = #ваш токен
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
