@@ -96,7 +96,7 @@ async def text_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await msg.edit_text(result, parse_mode="Markdown")
 
 def main():
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.WARNING)
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
