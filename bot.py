@@ -62,7 +62,7 @@ def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
                 
             return header + "\n\n".join(lines)
         else:
-            return f"❌ Ошибка API: {resp.status_code}"
+            return f"❌ Ошибка API: {resp.status_code}\n{resp.text}"
             
     except Exception as e:
         return f"❌ Ошибка: {e}"
