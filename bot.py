@@ -44,9 +44,17 @@ YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 # ================================
 
 # ========== БЕЛЫЙ СПИСОК ==========
-# Вставьте сюда свой ID и ID близких через запятую (без кавычек)
-ALLOWED_USERS = [1367412877] 
+ALLOWED_USERS = [1367412877] # <-- ВСТАВЬТЕ СВОИ ID СЮДА!
 # ==================================
+
+def restricted(func):
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        user_id = update.effective_user.id
+        if user_id not in ALLOWED_USERS:
+            await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
+            return
+        return await func(update, context, *args, **kwargs)
+    return wrapper
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
     # ... (дальше идет ваш код функции) ...
