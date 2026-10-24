@@ -28,17 +28,29 @@ YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 ALLOWED_USERS = [1367412877] 
 # ==========================================
 
+# Глобальная переменная для кэша станций
+STATIONS_CACHE = None
+
 def get_code(city_name: str) -> str:
-    url = f"https://suggests.rasp.yandex.net/all_suggests?format=old&part={city_name}"
-    try:
-        resp = requests.get(url, timeout=5)
-        if resp.status_code == 200:
-            data = resp.json()
-            for item in data:
-                if item.get("type") == "settlement":
-                    return item.get("code")
-    except:
-        pass
+    global STATIONS_CACHE
+    if STATIONS_CACHE is None:
+        # Загружаем справочник станций только один раз
+        url = f"https://api.rasp.yandex-net.ru/v3.0/stations_list/?apikey={YANDEX_API_KEY}&lang=ru_RU&format=json"
+        try:
+            resp = requests.get(url, timeout=30)  # Даем больше времени на загрузку
+            if resp.status_code == 200:
+                STATIONS_CACHE = resp.json()
+            else:
+                return None
+        except Exception:
+            return None
+
+    # Ищем город в загруженном справочнике
+    for country in STATIONS_CACHE.get("countries", []):
+        for region in country.get("regions", []):
+            for settlement in region.get("settlements", []):
+                if settlement.get("title", "").lower() == city_name.lower():
+                    return settlement.get("codes", {}).get("yandex_code")
     return None
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
