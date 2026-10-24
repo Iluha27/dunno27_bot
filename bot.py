@@ -8,6 +8,7 @@ from flask import Flask
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
+# ========== ВЕБ-СЕРВЕР ДЛЯ RENDER ==========
 app_web = Flask(__name__)
 
 @app_web.route('/')
@@ -17,71 +18,36 @@ def home():
 def run_web():
     port = int(os.environ.get("PORT", 10000))
     app_web.run(host="0.0.0.0", port=port)
+# ==========================================
 
-
-import sys
-from datetime import datetime
-import requests
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-import os
-from flask import Flask
-
-app_web = Flask(__name__)
-
-@app_web.route('/')
-def home():
-    return "Bot is running!"
-# ========== ВАШИ КЛЮЧИ ==========
+# ========== ВАШИ КЛЮЧИ И ДОСТУП ==========
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
-# ================================
-# ... (выше идет код с Flask и импортами) ...
 
-# ========== ВАШИ КЛЮЧИ ==========
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
-# ================================
+# ВСТАВЬТЕ СЮДА ВАШ ID И ID БЛИЗКИХ (через запятую)
+ALLOWED_USERS = [1367412877] 
+# ==========================================
 
-# ========== БЕЛЫЙ СПИСОК ==========
-ALLOWED_USERS = [1367412877] # <-- ВСТАВЬТЕ СВОИ ID 
+def get_code(city_name: str) -> str:
+    url = f"https://suggests.rasp.yandex.net/all_suggests?format=old&part={city_name}"
+    try:
+        resp = requests.get(url, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            for item in data:
+                if item.get("type") == "settlement":
+                    return item.get("code")
+    except:
+        pass
+    return None
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-
-def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-
-def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-
-def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-    # ... (дальше идет ваш код функции) ...
-def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-    """Запрашивает расписание, автоматически определяя коды станций по названиям."""
-    
-    def get_code(city_name: str) -> str:
-        # Запрашиваем список всех станций (файл весит около 40 МБ)
-        url = f"https://api.rasp.yandex-net.ru/v3.0/stations_list/?apikey={YANDEX_API_KEY}&lang=ru_RU&format=json"
-        resp = requests.get(url)
-        if resp.status_code != 200:
-            return None
-            
-        data = resp.json()
-        # Ищем город в списке стран и регионов
-        for country in data.get("countries", []):
-            for region in country.get("regions", []):
-                for settlement in region.get("settlements", []):
-                    if settlement.get("title", "").lower() == city_name.lower():
-                        # Возвращаем код города (например, c213)
-                        return settlement.get("codes", {}).get("yandex_code")
-        return None
-
-    # Получаем коды для городов
     from_code = get_code(from_city)
     to_code = get_code(to_city)
 
     if not from_code or not to_code:
         return f"❌ Не удалось найти город. Проверьте название: {from_city} или {to_city}"
 
-    # Формируем запрос на расписание
     url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_code}&to={to_code}&lang=ru_RU&date={date_str}&transport_types=train&format=json"
     
     try:
@@ -113,30 +79,34 @@ def get_main_keyboard():
     ]
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE): if update.effective_user.id not in ALLOWED_USERS:
-    await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
-    return
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ALLOWED_USERS:
+        await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
+        return
+
     await update.message.reply_text(
         "🚆 Привет! Я бот расписания поездов.\n\n"
         "📌 *Как использовать:*\n"
         "• Напиши `Город в Город` (сегодня)\n"
         "• Или `Город в Город ГГГГ-ММ-ДД`\n"
-        "• Пример: `Москва в Санкт-Петербург`\n\n"
-        "Я понимаю русские названия городов, коды не нужны.",
+        "• Пример: `Москва в Санкт-Петербург`",
         parse_mode="Markdown",
         reply_markup=get_main_keyboard()
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ALLOWED_USERS:
+        return
     await update.message.reply_text(
         "Формат:\n"
         "`Москва в Санкт-Петербург` – сегодня\n"
-        "`Москва в Санкт-Петербург 2026-05-10` – конкретная дата\n\n"
-        "Пишите города на русском, бот сам их найдёт.",
+        "`Москва в Санкт-Петербург 2026-05-10` – конкретная дата",
         parse_mode="Markdown"
     )
 
 async def trains_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ALLOWED_USERS:
+        return
     await update.message.reply_text(
         "Введите маршрут в формате:\n"
         "`Город в Город` или `Город в Город ГГГГ-ММ-ДД`\n"
@@ -145,11 +115,15 @@ async def trains_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def help_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ALLOWED_USERS:
+        return
     await help_command(update, context)
 
-async def text_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE): if update.effective_user.id not in ALLOWED_USERS:
-    await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
-    return
+async def text_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id not in ALLOWED_USERS:
+        await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
+        return
+
     text = update.message.text
     if " в " not in text:
         return
@@ -180,14 +154,6 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_schedule))
     app.run_polling()
 
-
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app_web.run(host="0.0.0.0", port=port)
-
 if __name__ == "__main__":
-    # Запускаем веб-сервер в отдельном потоке
     threading.Thread(target=run_web).start()
-    # Запускаем самого бота
     main()
