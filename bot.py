@@ -44,17 +44,7 @@ YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 # ================================
 
 # ========== БЕЛЫЙ СПИСОК ==========
-ALLOWED_USERS = [1367412877] # <-- ВСТАВЬТЕ СВОИ ID СЮДА!
-# ==================================
-
-def restricted(func):
-    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
-        user_id = update.effective_user.id
-        if user_id not in ALLOWED_USERS:
-            await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
-            return
-        return await func(update, context, *args, **kwargs)
-    return wrapper
+ALLOWED_USERS = [1367412877] # <-- ВСТАВЬТЕ СВОИ ID 
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
 
@@ -123,7 +113,9 @@ def get_main_keyboard():
     ]
     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE): if update.effective_user.id not in ALLOWED_USERS:
+    await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
+    return
     await update.message.reply_text(
         "🚆 Привет! Я бот расписания поездов.\n\n"
         "📌 *Как использовать:*\n"
@@ -155,7 +147,9 @@ async def trains_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await help_command(update, context)
 
-async def text_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def text_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE): if update.effective_user.id not in ALLOWED_USERS:
+    await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
+    return
     text = update.message.text
     if " в " not in text:
         return
