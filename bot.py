@@ -38,7 +38,7 @@ def get_code(city_name: str) -> str:
     global STATIONS_CACHE
     if STATIONS_CACHE is None:
         print("Загрузка справочника станций...") # Будет видно в логах
-        url = f"https://api.rasp.yandex-net.ru/v3.0/stations_list/?apikey={YANDEX_API_KEY}&lang=ru_RU&format=json"
+        url = f"https://api.rasp.yandex-net.ru/v3.0/suggests/?apikey={YANDEX_API_KEY}&part={city_name}&lang=ru_RU&format=json"
         try:
             # Увеличиваем таймаут, так как файл большой
             resp = requests.get(url, timeout=60)
@@ -151,16 +151,20 @@ async def text_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⛔ Извините, этот бот работает только для избранных пользователей.")
         return
 
-    text = update.message.text
-    if " в " not in text:
-        return
-    parts = text.split(" в ")
-    if len(parts) != 2:
-        await update.message.reply_text("Неверный формат. Пример: `Москва в Санкт-Петербург`", parse_mode="Markdown")
-        return
-    from_city = parts[0].strip()
-    rest = parts[1].strip().split()
-    to_city = rest[0]
+    # Очищаем текст от кавычек, точек и лишних пробелов
+text = update.message.text.replace('«', '').replace('»', '').replace('"', '').replace('.', '').strip()
+
+if " в " not in text:
+    return
+    
+parts = text.split(" в ")
+if len(parts) != 2:
+    await update.message.reply_text("Неверный формат. Пример: `Москва в Санкт-Петербург`", parse_mode="Markdown")
+    return
+    
+from_city = parts[0].strip()
+rest = parts[1].strip().split()
+to_city = rest[0]
     date_str = rest[1] if len(rest) > 1 else datetime.now().strftime("%Y-%m-%d")
     try:
         datetime.strptime(date_str, "%Y-%m-%d")
