@@ -32,18 +32,19 @@ ALLOWED_USERS = [1367412877]
 STATIONS_CACHE = None
 
 def get_code(city_name: str) -> str:
-    global STATIONS_CACHE
-    if STATIONS_CACHE is None:
-        # Загружаем справочник станций только один раз
-        url = f"https://api.rasp.yandex-net.ru/v3.0/stations_list/?apikey={YANDEX_API_KEY}&lang=ru_RU&format=json"
-        try:
-            resp = requests.get(url, timeout=30)  # Даем больше времени на загрузку
-            if resp.status_code == 200:
-                STATIONS_CACHE = resp.json()
-            else:
-                return None
-        except Exception:
-            return None
+    url = f"https://suggests.rasp.yandex.net/all_suggests?format=old&part={city_name}"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            # Ищем именно город (settlement), а не станцию или остановку
+            for item in data:
+                if item.get("type") == "settlement":
+                    return item.get("code")
+    except Exception as e:
+        print(f"Ошибка в get_code: {e}") # Если что-то пойдет не так, это появится в логах
+    return None
 
     # Ищем город в загруженном справочнике
     for country in STATIONS_CACHE.get("countries", []):
