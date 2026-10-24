@@ -38,18 +38,42 @@ YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 # ================================
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
-    """Запрашивает расписание."""
-    url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_city}&to={to_city}&lang=ru_RU&date={date_str}&transport_types=train&format=json"
+    """Запрашивает расписание, автоматически определяя коды станций по названиям."""
+    
+    def get_code(city_name: str) -> str:
+        # Запрашиваем список всех станций (файл весит около 40 МБ)
+        url = f"https://api.rasp.yandex-net.ru/v3.0/stations_list/?apikey={YANDEX_API_KEY}&lang=ru_RU&format=json"
+        resp = requests.get(url)
+        if resp.status_code != 200:
+            return None
+            
+        data = resp.json()
+        # Ищем город в списке стран и регионов
+        for country in data.get("countries", []):
+            for region in country.get("regions", []):
+                for settlement in region.get("settlements", []):
+                    if settlement.get("title", "").lower() == city_name.lower():
+                        # Возвращаем код города (например, c213)
+                        return settlement.get("codes", {}).get("yandex_code")
+        return None
+
+    # Получаем коды для городов
+    from_code = get_code(from_city)
+    to_code = get_code(to_city)
+
+    if not from_code or not to_code:
+        return f"❌ Не удалось найти город. Проверьте название: {from_city} или {to_city}"
+
+    # Формируем запрос на расписание
+    url = f"https://api.rasp.yandex-net.ru/v3.0/search/?apikey={YANDEX_API_KEY}&from={from_code}&to={to_code}&lang=ru_RU&date={date_str}&transport_types=train&format=json"
     
     try:
         resp = requests.get(url, timeout=10)
-        
         if resp.status_code == 200:
             data = resp.json()
             segments = data.get('segments')
             if not segments:
                 return f"🚫 На {date_str} поездов не найдено."
-                
             header = f"🚉 *{from_city} → {to_city}* на {date_str}\n\n"
             lines = []
             for i, seg in enumerate(segments[:5], 1):
@@ -59,11 +83,9 @@ def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
                 dep = dep_raw.split('T')[1][:5] if 'T' in dep_raw else dep_raw
                 arr = arr_raw.split('T')[1][:5] if 'T' in arr_raw else arr_raw
                 lines.append(f"{i}. 🚄 *Поезд №{train}*\n   🕒 {dep} → {arr}")
-                
             return header + "\n\n".join(lines)
         else:
             return f"❌ Ошибка API: {resp.status_code}\n{resp.text}"
-            
     except Exception as e:
         return f"❌ Ошибка: {e}"
 
