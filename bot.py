@@ -36,7 +36,20 @@ def home():
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 # ================================
+# ... (выше идет код с Flask и импортами) ...
 
+# ========== ВАШИ КЛЮЧИ ==========
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
+# ================================
+
+# ========== БЕЛЫЙ СПИСОК ==========
+# Вставьте сюда свой ID и ID близких через запятую (без кавычек)
+ALLOWED_USERS = [1367412877] 
+# ==================================
+
+def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
+    # ... (дальше идет ваш код функции) ...
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
     """Запрашивает расписание, автоматически определяя коды станций по названиям."""
     
