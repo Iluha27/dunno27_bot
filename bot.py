@@ -57,6 +57,8 @@ def restricted(func):
     return wrapper
 
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
+
+def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
     # ... (дальше идет ваш код функции) ...
 def get_schedule(from_city: str, to_city: str, date_str: str) -> str:
     """Запрашивает расписание, автоматически определяя коды станций по названиям."""
