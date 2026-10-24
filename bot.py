@@ -31,25 +31,33 @@ ALLOWED_USERS = [1367412877]
 # Глобальная переменная для кэша станций
 STATIONS_CACHE = None
 
+# Глобальная переменная для кэша станций
+STATIONS_CACHE = None
+
 def get_code(city_name: str) -> str:
-    url = f"https://api.rasp.yandex-net.ru/v3.0/suggests/?apikey={YANDEX_API_KEY}&part={city_name}&lang=ru_RU"
-    try:
-        resp = requests.get(url, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            suggests = data.get("suggests", [])
-            
-            # Ищем точное совпадение названия (без учета регистра)
-            for item in suggests:
-                if item.get("title", "").lower() == city_name.lower():
-                    return item.get("code")
-            
-            # Если точного совпадения нет, но есть результаты, берем первый
-            if suggests:
-                return suggests[0].get("code")
-                
-    except Exception as e:
-        print(f"Ошибка в get_code: {e}") # Если что-то пойдет не так, это появится в логах
+    global STATIONS_CACHE
+    if STATIONS_CACHE is None:
+        print("Загрузка справочника станций...") # Будет видно в логах
+        url = f"https://api.rasp.yandex-net.ru/v3.0/stations_list/?apikey={YANDEX_API_KEY}&lang=ru_RU&format=json"
+        try:
+            # Увеличиваем таймаут, так как файл большой
+            resp = requests.get(url, timeout=60)
+            if resp.status_code == 200:
+                STATIONS_CACHE = resp.json()
+                print("Справочник станций успешно загружен.")
+            else:
+                print(f"Ошибка загрузки stations_list: {resp.status_code}")
+                return None
+        except Exception as e:
+            print(f"Ошибка при загрузке справочника: {e}")
+            return None
+
+    # Ищем город в загруженном справочнике
+    for country in STATIONS_CACHE.get("countries", []):
+        for region in country.get("regions", []):
+            for settlement in region.get("settlements", []):
+                if settlement.get("title", "").lower() == city_name.lower():
+                    return settlement.get("codes", {}).get("yandex_code")
     return None
 
     # Ищем город в загруженном справочнике
