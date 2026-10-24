@@ -32,16 +32,22 @@ ALLOWED_USERS = [1367412877]
 STATIONS_CACHE = None
 
 def get_code(city_name: str) -> str:
-    url = f"https://suggests.rasp.yandex.net/all_suggests?format=old&part={city_name}"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    url = f"https://api.rasp.yandex-net.ru/v3.0/suggests/?apikey={YANDEX_API_KEY}&part={city_name}&lang=ru_RU"
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
+        resp = requests.get(url, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
-            # Ищем именно город (settlement), а не станцию или остановку
-            for item in data:
-                if item.get("type") == "settlement":
+            suggests = data.get("suggests", [])
+            
+            # Ищем точное совпадение названия (без учета регистра)
+            for item in suggests:
+                if item.get("title", "").lower() == city_name.lower():
                     return item.get("code")
+            
+            # Если точного совпадения нет, но есть результаты, берем первый
+            if suggests:
+                return suggests[0].get("code")
+                
     except Exception as e:
         print(f"Ошибка в get_code: {e}") # Если что-то пойдет не так, это появится в логах
     return None
